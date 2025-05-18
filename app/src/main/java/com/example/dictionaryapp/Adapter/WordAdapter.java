@@ -1,25 +1,44 @@
 // WordAdapter.java
 package com.example.dictionaryapp.Adapter;
 
+import android.content.Context;
+import android.content.Intent;
+import android.speech.tts.TextToSpeech;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.dictionaryapp.Activity.WordDetailActivity;
 import com.example.dictionaryapp.Entity.WordEntity;
 import com.example.dictionaryapp.R;
 
 import java.util.List;
+import java.util.Locale;
 
 public class WordAdapter extends RecyclerView.Adapter<WordAdapter.WordViewHolder> {
 
     private List<WordEntity> wordList;
+    private Context context;
 
-    public WordAdapter(List<WordEntity> wordList) {
+    private TextToSpeech tts;
+
+
+    public WordAdapter(Context context, List<WordEntity> wordList) {
+        this.context = context;
         this.wordList = wordList;
+
+        tts = new TextToSpeech(context.getApplicationContext(), status -> {
+            if (status == TextToSpeech.SUCCESS) {
+                tts.setLanguage(Locale.US);
+            }
+        });
+
     }
 
     @NonNull
@@ -32,7 +51,21 @@ public class WordAdapter extends RecyclerView.Adapter<WordAdapter.WordViewHolder
 
     @Override
     public void onBindViewHolder(@NonNull WordViewHolder holder, int position) {
-        holder.wordText.setText(wordList.get(position).word);
+        WordEntity word = wordList.get(position);
+        holder.wordText.setText(word.word);
+        holder.itemView.setOnClickListener(v -> {
+            Intent intent = new Intent(context, WordDetailActivity.class);
+            intent.putExtra("word", word.word);
+            intent.putExtra("pronounce", word.pronounce);
+            intent.putExtra("meaning", word.meaning);
+            context.startActivity(intent);
+        });
+
+        holder.buttonSpeaker.setOnClickListener(v -> {
+            if (tts != null) {
+                tts.speak(word.word, TextToSpeech.QUEUE_FLUSH, null, null);
+            }
+        });
     }
 
     @Override
@@ -42,10 +75,13 @@ public class WordAdapter extends RecyclerView.Adapter<WordAdapter.WordViewHolder
 
     public static class WordViewHolder extends RecyclerView.ViewHolder {
         TextView wordText;
+        ImageView buttonSpeaker;
 
         public WordViewHolder(@NonNull View itemView) {
             super(itemView);
             wordText = itemView.findViewById(R.id.textViewWord);
+            buttonSpeaker = itemView.findViewById(R.id.imageViewSpeaker);
         }
     }
+
 }

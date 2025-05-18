@@ -40,9 +40,9 @@ public class SearchFragment extends Fragment {
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
 
         controller = new DictionaryController(getContext());
-        List<WordEntity> wordList = controller.getAllWords();
+        List<WordEntity> wordList = controller.getAllWordsSorted();
 
-        adapter = new WordAdapter(wordList);
+        adapter = new WordAdapter(getContext(), wordList);
         recyclerView.setAdapter(adapter);
 
         AlphabetAdapter alphabetAdapter = new AlphabetAdapter();
@@ -61,4 +61,5 @@ public class SearchFragment extends Fragment {
 
         return view;
     }
+
 }

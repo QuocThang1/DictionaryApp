@@ -1,5 +1,6 @@
 <!-- res/layout/word_item.xml -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
@@ -21,14 +22,15 @@
             android:layout_height="wrap_content"
             android:text="Example"
             android:textSize="18sp"
-            android:textColor="@android:color/black" />
+            android:textColor="@color/text_primary" />
 
         <ImageView
             android:id="@+id/imageViewFavorite"
             android:layout_width="32dp"
             android:layout_height="32dp"
             android:src="@drawable/ic_star_border"
-            android:contentDescription="Favorite" />
+            android:contentDescription="Favorite"
+            app:tint="@color/favorite_inactive" />
 
         <ImageView
             android:id="@+id/imageViewSpeaker"
@@ -36,13 +38,14 @@
             android:layout_height="32dp"
             android:layout_marginStart="8dp"
             android:src="@drawable/ic_speaker"
-            android:contentDescription="Speaker" />
+            android:contentDescription="Speaker"
+            app:tint="@color/primary" />
     </LinearLayout>
 
     <!-- Divider line -->
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:background="@android:color/darker_gray" />
+        android:background="@color/divider_color" />
 
 </LinearLayout>

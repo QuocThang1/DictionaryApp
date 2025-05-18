@@ -34,4 +34,9 @@ public class DictionaryController {
         return wordDao.getAll();
     }
 
+    public List<WordEntity> getAllWordsSorted() {
+        return wordDao.getAllWordsSorted();
+    }
+
+
 }

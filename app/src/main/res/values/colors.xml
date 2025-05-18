@@ -2,4 +2,30 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <!-- Phối màu chính -->
+    <color name="primary">#3F51B5</color> <!-- Indigo 500 -->
+    <color name="primary_color">#4A6572</color>
+    <color name="primary_dark">#303F9F</color> <!-- Indigo 700 -->
+    <color name="primary_light">#C5CAE9</color> <!-- Indigo 100 -->
+    <color name="accent">#FF4081</color> <!-- Pink A200 -->
+    <color name="accent_color">#F9AA33</color>
+
+    <!-- Màu nền cho SearchFragment -->
+    <color name="background_color">#F5F5F5</color> <!-- Xám nhạt cho nền tổng thể -->
+    <color name="recyclerview_background">#FFFFFF</color> <!-- Trắng cho danh sách từ -->
+    <color name="alphabet_background">#E8EAF6</color> <!-- Indigo 50 cho thanh chữ cái -->
+    <color name="scrollbar_color">#BDBDBD</color> <!-- Xám cho thanh cuộn -->
+    <color name="card_background">#FFFFFF</color>
+
+    <!-- Màu text -->
+    <color name="text_primary">#212121</color> <!-- Đen nhạt cho text chính -->
+    <color name="text_secondary">#757575</color> <!-- Xám đậm cho text phụ -->
+    <color name="text_alphabet">#3F51B5</color> <!-- Indigo cho chữ cái -->
+
+    <!-- Màu phân cách -->
+    <color name="divider_color">#EEEEEE</color> <!-- Xám rất nhạt cho đường ngăn cách -->
+
+    <!-- Màu nổi bật cho từ yêu thích -->
+    <color name="favorite_active">#FFC107</color> <!-- Amber 500 -->
+    <color name="favorite_inactive">#BDBDBD</color> <!-- Xám cho sao chưa chọn -->
 </resources>

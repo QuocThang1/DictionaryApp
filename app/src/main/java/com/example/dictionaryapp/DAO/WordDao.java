@@ -30,4 +30,8 @@ public interface WordDao {
 
     @Query("SELECT * FROM word_table")
     List<WordEntity> getAll();
+
+    @Query("SELECT * FROM word_table ORDER BY word ASC")
+    List<WordEntity> getAllWordsSorted();
+
 }
