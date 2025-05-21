@@ -17,7 +17,7 @@ public class DictionaryController {
     }
 
     public List<WordEntity> search(String keyword) {
-        return wordDao.searchWords("%" + keyword + "%");
+        return wordDao.searchWords(keyword);
     }
 
     public void addWord(String word, String meaning, String pronounce) {

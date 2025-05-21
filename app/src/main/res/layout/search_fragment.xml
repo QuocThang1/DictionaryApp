@@ -1,26 +1,59 @@
-<!-- res/layout/search_fragment.xml -->
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background_color">
+    android:background="@color/primary">
 
+    <!-- Thanh tiêu đề -->
+    <RelativeLayout
+        android:id="@+id/headerLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="16dp"
+        android:background="@color/primary">
+
+        <!-- Chữ DictionaryApp bên trái -->
+        <TextView
+            android:id="@+id/headerTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="DictionaryApp"
+            android:textSize="30sp"
+            android:textStyle="bold"
+            android:textColor="@color/black"
+            android:layout_alignParentStart="true"
+            android:layout_centerVertical="true" />
+
+        <!-- Icon kính lúp bên phải -->
+        <ImageButton
+            android:id="@+id/searchButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="20dp"
+            android:src="@drawable/ic_search"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:contentDescription="Search" />
+    </RelativeLayout>
+
+    <!-- RecyclerView chính -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerViewWords"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentTop="true"
+        android:layout_below="@id/headerLayout"
         android:paddingEnd="32dp"
         android:background="@color/recyclerview_background"
         android:scrollbarThumbVertical="@color/scrollbar_color"
         android:scrollbars="vertical" />
 
-    <!-- Thanh chữ cái A-Z -->
+    <!-- ListView A-Z bên phải -->
     <ListView
         android:id="@+id/alphabetListView"
         android:layout_width="32dp"
         android:layout_height="match_parent"
         android:layout_alignParentEnd="true"
+        android:layout_below="@id/headerLayout"
         android:divider="@null"
         android:scrollbars="none"
         android:background="@color/alphabet_background"

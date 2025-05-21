@@ -85,6 +85,7 @@ public class WordAdapter extends RecyclerView.Adapter<WordAdapter.WordViewHolder
         });
     }
 
+
     @Override
     public int getItemCount() {
         return wordList.size();
@@ -100,6 +101,11 @@ public class WordAdapter extends RecyclerView.Adapter<WordAdapter.WordViewHolder
             buttonSpeaker = itemView.findViewById(R.id.imageViewSpeaker);
             buttonFavorite = itemView.findViewById(R.id.imageViewFavorite);
         }
+    }
+
+    public void updateData(List<WordEntity> newWordList) {
+        this.wordList = newWordList;
+        notifyDataSetChanged();
     }
 
 }

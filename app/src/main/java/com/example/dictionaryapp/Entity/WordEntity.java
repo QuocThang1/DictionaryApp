@@ -20,4 +20,12 @@ public class WordEntity {
         this.isFavorite = isFavorite;
         this.pronounce = pronounce;
     }
+
+    public String getWord() {
+        return word;
+    }
+
+    public void setWord(String word) {
+        this.word = word;
+    }
 }

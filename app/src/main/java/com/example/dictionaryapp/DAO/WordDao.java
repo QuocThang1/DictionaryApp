@@ -22,7 +22,7 @@ public interface WordDao {
     @Delete
     void delete(WordEntity word);
 
-    @Query("SELECT * FROM word_table WHERE word LIKE :keyword")
+    @Query("SELECT * FROM word_table WHERE word LIKE :keyword || '%'")
     List<WordEntity> searchWords(String keyword);
 
     @Query("SELECT * FROM word_table WHERE isFavorite = 1")
