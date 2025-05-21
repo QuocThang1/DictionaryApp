@@ -13,6 +13,7 @@ import com.example.dictionaryapp.Entity.WordEntity;
 public abstract class AppDatabase extends RoomDatabase {
 
     private static AppDatabase instance;
+    DatabaseCopyHelper DatabaseCopyHelper;
 
     public abstract WordDao wordDao();
 
@@ -20,7 +21,6 @@ public abstract class AppDatabase extends RoomDatabase {
         if (instance == null) {
             instance = Room.databaseBuilder(context.getApplicationContext(),
                             AppDatabase.class, "dictionary.db") // Tên file giống file trong assets
-                    .createFromAsset("dictionary.db") // Sử dụng file trong assets
                     .fallbackToDestructiveMigration()
                     .allowMainThreadQueries()
                     .build();

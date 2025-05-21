@@ -7,6 +7,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 
+import com.example.dictionaryapp.Database.DatabaseCopyHelper;
 import com.example.dictionaryapp.Fragment.FavoriteFragment;
 import com.example.dictionaryapp.Fragment.HistoryFragment;
 import com.example.dictionaryapp.Fragment.SearchFragment;
@@ -19,10 +20,12 @@ import com.google.android.material.navigation.NavigationBarView;
 public class MainActivity extends AppCompatActivity {
 
     BottomNavigationView bottomNavigationView;
+    DatabaseCopyHelper DatabaseCopyHelper;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        DatabaseCopyHelper.copyDatabaseIfNeeded(this, "dictionary.db");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         bottomNavigationView = findViewById(R.id.bottom_navigation);

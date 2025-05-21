@@ -1,4 +1,3 @@
-// WordAdapter.java
 package com.example.dictionaryapp.Adapter;
 
 import android.content.Context;
@@ -7,7 +6,6 @@ import android.speech.tts.TextToSpeech;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -22,34 +20,30 @@ import com.example.dictionaryapp.R;
 import java.util.List;
 import java.util.Locale;
 
-public class WordAdapter extends RecyclerView.Adapter<WordAdapter.WordViewHolder> {
+public class FavoriteAdapter extends RecyclerView.Adapter<FavoriteAdapter.WordViewHolder> {
+    private final List<WordEntity> wordList;
+    private final DictionaryController controller;
 
-    private List<WordEntity> wordList;
     private Context context;
+    private TextToSpeech tts ;
 
-    private DictionaryController controller;
-
-    private TextToSpeech tts;
-
-
-    public WordAdapter(Context context, List<WordEntity> wordList) {
+    public FavoriteAdapter(List<WordEntity> wordList, DictionaryController controller, Context context) {
         this.context = context;
         this.wordList = wordList;
-        controller = new DictionaryController(context);
+        this.controller = controller;
 
         this.tts = new TextToSpeech(context.getApplicationContext(), status -> {
             if (status == TextToSpeech.SUCCESS) {
                 tts.setLanguage(Locale.US);
             }
         });
-
     }
 
     @NonNull
     @Override
     public WordViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.word_item, parent, false);
+                .inflate(R.layout.favorite_item, parent, false);
         return new WordViewHolder(view);
     }
 
@@ -57,11 +51,6 @@ public class WordAdapter extends RecyclerView.Adapter<WordAdapter.WordViewHolder
     public void onBindViewHolder(@NonNull WordViewHolder holder, int position) {
         WordEntity word = wordList.get(position);
         holder.wordText.setText(word.word);
-
-        holder.buttonFavorite.setImageResource(
-                word.isFavorite ? R.drawable.ic_star_filled : R.drawable.ic_star_border);
-        holder.buttonFavorite.setColorFilter(context.getColor(
-                word.isFavorite ? R.color.favorite_active : R.color.favorite_inactive));
 
         holder.itemView.setOnClickListener(v -> {
             Intent intent = new Intent(context, WordDetailActivity.class);
@@ -71,17 +60,17 @@ public class WordAdapter extends RecyclerView.Adapter<WordAdapter.WordViewHolder
             context.startActivity(intent);
         });
 
-        holder.buttonSpeaker.setOnClickListener(v -> {
+        holder.speakerIcon.setOnClickListener(v -> {
             if (tts != null) {
                 tts.speak(word.word, TextToSpeech.QUEUE_FLUSH, null, null);
             }
         });
 
-        holder.buttonFavorite.setOnClickListener(v -> {
-            boolean newStatus = !word.isFavorite;
-            word.isFavorite = newStatus;
-            controller.updateFavorite(word, newStatus);
-            notifyItemChanged(position);
+        holder.deleteIcon.setOnClickListener(v -> {
+            word.isFavorite = false;
+            controller.updateFavorite(word, false);
+            wordList.remove(position);
+            notifyItemRemoved(position);
         });
     }
 
@@ -90,16 +79,15 @@ public class WordAdapter extends RecyclerView.Adapter<WordAdapter.WordViewHolder
         return wordList.size();
     }
 
-    public static class WordViewHolder extends RecyclerView.ViewHolder {
+    static class WordViewHolder extends RecyclerView.ViewHolder {
         TextView wordText;
-        ImageView buttonSpeaker, buttonFavorite;
+        ImageView speakerIcon, deleteIcon;
 
         public WordViewHolder(@NonNull View itemView) {
             super(itemView);
-            wordText = itemView.findViewById(R.id.textViewWord);
-            buttonSpeaker = itemView.findViewById(R.id.imageViewSpeaker);
-            buttonFavorite = itemView.findViewById(R.id.imageViewFavorite);
+            wordText = itemView.findViewById(R.id.textViewFavoriteWord);
+            speakerIcon = itemView.findViewById(R.id.buttonSpeak);
+            deleteIcon = itemView.findViewById(R.id.buttonRemoveFavorite);
         }
     }
-
 }

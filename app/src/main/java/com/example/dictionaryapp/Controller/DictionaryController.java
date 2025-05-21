@@ -34,6 +34,10 @@ public class DictionaryController {
         return wordDao.getAll();
     }
 
+    public List<WordEntity> getFavoriteWords() {
+        return wordDao.getFavorites();
+    }
+
     public List<WordEntity> getAllWordsSorted() {
         return wordDao.getAllWordsSorted();
     }
