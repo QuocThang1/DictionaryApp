@@ -32,14 +32,27 @@ android {
 }
 
 dependencies {
-
     implementation(libs.appcompat)
     implementation(libs.material)
     implementation(libs.activity)
     implementation(libs.constraintlayout)
+    
+    // Navigation components
+    implementation(libs.navigation.fragment)
+    implementation(libs.navigation.ui)
+    
+    // Room components
+    implementation("androidx.room:room-runtime:2.6.1")
+    annotationProcessor("androidx.room:room-compiler:2.6.1")
+    
+    // ML Kit for text recognition
+    implementation(libs.mlkit.text.recognition)
+    
+    // ML Kit for translation
+    implementation("com.google.mlkit:translate:17.0.2")
+    
+    // Testing dependencies
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
-    implementation("androidx.room:room-runtime:2.6.1")
-    annotationProcessor("androidx.room:room-compiler:2.6.1")
 }
