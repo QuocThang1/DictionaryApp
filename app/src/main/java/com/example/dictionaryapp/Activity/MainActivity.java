@@ -25,7 +25,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        DatabaseCopyHelper.copyDatabaseIfNeeded(this, "dictionary.db");
+        DatabaseCopyHelper.copyDatabaseIfNeeded(this, "dictionary1.db");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         bottomNavigationView = findViewById(R.id.bottom_navigation);
