@@ -2,8 +2,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- Thêm quyền truy cập Internet -->
+    <!-- Thêm quyền internet -->
     <uses-permission android:name="android.permission.INTERNET" />
+
     <!-- Thêm quyền truy cập cho TextToSpeech -->
     <queries>
         <intent>
@@ -32,6 +33,10 @@
         </activity>
         <activity android:name=".Activity.WordDetailActivity"/>
         <activity android:name=".Activity.SearchActivity"/>
+        <!-- Moved VideoLessonDetailActivity inside application tag -->
+        <activity
+            android:name=".Activity.VideoLessonDetailActivity"
+            android:exported="false" />
 
     </application>
 

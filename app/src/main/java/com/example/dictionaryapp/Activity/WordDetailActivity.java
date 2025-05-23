@@ -7,6 +7,7 @@ import android.view.View;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
+import com.example.dictionaryapp.Controller.HistoryController;
 import com.example.dictionaryapp.R;
 
 import java.util.Locale;
@@ -16,11 +17,14 @@ public class WordDetailActivity extends Activity {
     TextView textWord, textPronounce, textMeaning;
     ImageButton buttonSpeaker, buttonBack;
     TextToSpeech tts;
+    private HistoryController historyController;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_word_detail);
+
+        historyController = new HistoryController(this);
 
         textWord = findViewById(R.id.textWord);
         textPronounce = findViewById(R.id.textPronounce);
@@ -35,6 +39,9 @@ public class WordDetailActivity extends Activity {
         textWord.setText(word);
         textPronounce.setText("[" + pronounce + "]");
         textMeaning.setText(meaning);
+
+        // Add to history
+        historyController.addToHistory(word);
 
         tts = new TextToSpeech(this, status -> {
             if (status == TextToSpeech.SUCCESS) {

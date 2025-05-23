@@ -13,12 +13,14 @@ import java.util.List;
 
 import com.example.dictionaryapp.Adapter.WordAdapter;
 import com.example.dictionaryapp.Controller.DictionaryController;
+import com.example.dictionaryapp.Controller.HistoryController;
 import com.example.dictionaryapp.Entity.WordEntity;
 import com.example.dictionaryapp.R;
 
 public class SearchActivity extends AppCompatActivity {
 
     private DictionaryController dictionaryController;
+    private HistoryController historyController;
     private WordAdapter wordAdapter;
 
     private ImageButton buttonBack;
@@ -31,6 +33,7 @@ public class SearchActivity extends AppCompatActivity {
         setContentView(R.layout.activity_search);
 
         dictionaryController = new DictionaryController(this);
+        historyController = new HistoryController(this);
 
         searchView = findViewById(R.id.searchView);
         recyclerView = findViewById(R.id.searchResultsRecyclerView);
@@ -43,13 +46,15 @@ public class SearchActivity extends AppCompatActivity {
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
-                performSearch(query);
+                // Chỉ lưu lịch sử khi người dùng nhấn Enter hoặc nút tìm kiếm
+                performSearch(query, true);
                 return true;
             }
 
             @Override
             public boolean onQueryTextChange(String newText) {
-                performSearch(newText);
+                // Không lưu lịch sử khi người dùng đang nhập
+                performSearch(newText, false);
                 return true;
             }
         });
@@ -57,8 +62,13 @@ public class SearchActivity extends AppCompatActivity {
         buttonBack.setOnClickListener(v -> finish());
     }
 
-    private void performSearch(String keyword) {
+    private void performSearch(String keyword, boolean saveToHistory) {
         List<WordEntity> results = dictionaryController.search(keyword);
         wordAdapter.updateData(results);
+        
+        // Chỉ lưu vào lịch sử nếu saveToHistory = true và có kết quả tìm kiếm
+        if (saveToHistory && !results.isEmpty() && !keyword.trim().isEmpty()) {
+            historyController.addToHistory(keyword);
+        }
     }
 }

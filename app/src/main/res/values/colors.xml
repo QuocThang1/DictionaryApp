@@ -28,4 +28,6 @@
     <!-- Màu nổi bật cho từ yêu thích -->
     <color name="favorite_active">#FFC107</color> <!-- Amber 500 -->
     <color name="favorite_inactive">#BDBDBD</color> <!-- Xám cho sao chưa chọn -->
+    <color name="purple_500">#000000</color>
+
 </resources>
