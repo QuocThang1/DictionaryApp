@@ -1,220 +1,289 @@
 package com.example.dictionaryapp.Fragment;
 
-import android.Manifest;
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
-import android.graphics.ImageDecoder;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
-import android.provider.MediaStore;
-import android.speech.tts.TextToSpeech;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
+import com.example.dictionaryapp.Helper.ImageHelper;
+import com.example.dictionaryapp.Helper.TextToSpeechHelper;
+import com.example.dictionaryapp.Helper.TranslatorManager;
+import com.example.dictionaryapp.Helper.TranslatorManager.TranslationCallback;
 import com.example.dictionaryapp.R;
 import com.google.mlkit.vision.common.InputImage;
 import com.google.mlkit.vision.text.TextRecognition;
 import com.google.mlkit.vision.text.TextRecognizer;
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions;
-import com.google.mlkit.nl.translate.TranslateLanguage;
-import com.google.mlkit.nl.translate.Translation;
-import com.google.mlkit.nl.translate.Translator;
-import com.google.mlkit.nl.translate.TranslatorOptions;
 
 import java.io.IOException;
 import java.util.Locale;
 
 public class TextRecognitionFragment extends Fragment {
-    private static final int CAMERA_PERMISSION_CODE = 100;
-    private static final int STORAGE_PERMISSION_CODE = 101;
-    private static final int CAMERA_REQUEST_CODE = 102;
-    private static final int GALLERY_REQUEST_CODE = 103;
-
+    // UI components
     private ImageView imageView;
-    private TextView resultText;
+    private EditText recognizedText;
     private TextView translatedText;
-    private TextView sourceLanguageText;
-    private TextView targetLanguageText;
+    private Spinner sourceLanguageSpinner;
+    private Spinner targetLanguageSpinner;
     private Button captureButton;
     private Button galleryButton;
     private Button translateButton;
     private ImageButton speakSourceButton;
     private ImageButton speakTargetButton;
+    private ImageButton copySourceButton;
+    private ImageButton copyTargetButton;
+    
+    // Helper classes
     private TextRecognizer recognizer;
-    private Translator englishVietnameseTranslator;
-    private String recognizedTextContent = "";
-    private String sourceLanguage = "Tiếng Anh";
-    private String targetLanguage = "Tiếng Việt";
-    private TextToSpeech ttsSource;
-    private TextToSpeech ttsTarget;
+    private TextToSpeechHelper sourceTextToSpeech;
+    private TextToSpeechHelper targetTextToSpeech;
+    private TranslatorManager translatorManager;
+    private ImageHelper imageHelper;
+    private ClipboardManager clipboardManager;
+    
+    // Data
+    private String[] sourceLanguages;
+    private String[] targetLanguages;
+    private String[] sourceLanguageCodes;
+    private String[] targetLanguageCodes;
+    
+    // Locale tương ứng cho TextToSpeech
+    private final Locale[] sourceLocales = {
+            Locale.US,
+            new Locale("vi", "VN"),
+            Locale.FRANCE,
+            Locale.CHINA
+    };
+    
+    private final Locale[] targetLocales = {
+            new Locale("vi", "VN"),
+            Locale.US
+    };
+    
+    private int selectedSourceLanguage = 0;
+    private int selectedTargetLanguage = 0;
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.text_recognition_fragment, container, false);
 
+        initializeResources();
+        initializeViews(view);
+        setupSpinners();
+        setupTextToSpeech();
+        setupClickListeners();
+        
+        // Ban đầu vô hiệu hóa nút đọc và sao chép
+        speakSourceButton.setEnabled(false);
+        speakTargetButton.setEnabled(false);
+        copySourceButton.setEnabled(false);
+        copyTargetButton.setEnabled(false);
+
+        return view;
+    }
+    
+    private void initializeResources() {
+        // Lấy danh sách ngôn ngữ từ resources
+        sourceLanguages = getResources().getStringArray(R.array.source_languages);
+        targetLanguages = getResources().getStringArray(R.array.target_languages);
+        sourceLanguageCodes = getResources().getStringArray(R.array.source_language_codes);
+        targetLanguageCodes = getResources().getStringArray(R.array.target_language_codes);
+
+        // Khởi tạo các helper
+        clipboardManager = (ClipboardManager) requireContext().getSystemService(Context.CLIPBOARD_SERVICE);
+        recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS);
+        translatorManager = new TranslatorManager(requireContext());
+        imageHelper = new ImageHelper(this);
+    }
+
+    private void initializeViews(View view) {
         // Khởi tạo các thành phần UI
         imageView = view.findViewById(R.id.capturedImage);
-        resultText = view.findViewById(R.id.recognizedText);
+        recognizedText = view.findViewById(R.id.recognizedText);
         translatedText = view.findViewById(R.id.translatedText);
-        sourceLanguageText = view.findViewById(R.id.sourceLanguageText);
-        targetLanguageText = view.findViewById(R.id.targetLanguageText);
+        sourceLanguageSpinner = view.findViewById(R.id.sourceLanguageSpinner);
+        targetLanguageSpinner = view.findViewById(R.id.targetLanguageSpinner);
         captureButton = view.findViewById(R.id.captureButton);
         galleryButton = view.findViewById(R.id.galleryButton);
         translateButton = view.findViewById(R.id.translateButton);
         speakSourceButton = view.findViewById(R.id.speakSourceButton);
         speakTargetButton = view.findViewById(R.id.speakTargetButton);
+        copySourceButton = view.findViewById(R.id.copySourceButton);
+        copyTargetButton = view.findViewById(R.id.copyTargetButton);
+    }
 
-        // Thiết lập hiển thị ngôn ngữ
-        sourceLanguageText.setText(sourceLanguage);
-        targetLanguageText.setText(targetLanguage);
+    private void setupSpinners() {
+        // Thiết lập adapter cho spinner ngôn ngữ nguồn
+        ArrayAdapter<String> sourceAdapter = new ArrayAdapter<>(requireContext(),
+                android.R.layout.simple_spinner_item, sourceLanguages);
+        sourceAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        sourceLanguageSpinner.setAdapter(sourceAdapter);
+        
+        // Thiết lập adapter cho spinner ngôn ngữ đích
+        ArrayAdapter<String> targetAdapter = new ArrayAdapter<>(requireContext(),
+                android.R.layout.simple_spinner_item, targetLanguages);
+        targetAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        targetLanguageSpinner.setAdapter(targetAdapter);
+        
+        // Thiết lập sự kiện khi chọn ngôn ngữ nguồn
+        sourceLanguageSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                selectedSourceLanguage = position;
+                updateSourceLanguage();
+            }
 
-        // Khởi tạo TextToSpeech cho ngôn ngữ nguồn (tiếng Anh)
-        ttsSource = new TextToSpeech(requireContext(), status -> {
-            if (status == TextToSpeech.SUCCESS) {
-                int result = ttsSource.setLanguage(Locale.US);
-                if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
-                    speakSourceButton.setEnabled(false);
-                    Toast.makeText(requireContext(), "Không hỗ trợ đọc tiếng Anh", Toast.LENGTH_SHORT).show();
-                }
-            } else {
-                speakSourceButton.setEnabled(false);
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
             }
         });
+        
+        // Thiết lập sự kiện khi chọn ngôn ngữ đích
+        targetLanguageSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                selectedTargetLanguage = position;
+            }
 
-        // Khởi tạo TextToSpeech cho ngôn ngữ đích (tiếng Việt)
-        ttsTarget = new TextToSpeech(requireContext(), status -> {
-            if (status == TextToSpeech.SUCCESS) {
-                int result = ttsTarget.setLanguage(new Locale("vi", "VN"));
-                if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
-                    speakTargetButton.setEnabled(false);
-                    Toast.makeText(requireContext(), "Không hỗ trợ đọc tiếng Việt", Toast.LENGTH_SHORT).show();
-                }
-            } else {
-                speakTargetButton.setEnabled(false);
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
             }
         });
+    }
 
-        // Khởi tạo TextRecognizer
-        recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS);
-        
-        // Khởi tạo translator từ tiếng Anh sang tiếng Việt
-        TranslatorOptions options = new TranslatorOptions.Builder()
-                .setSourceLanguage(TranslateLanguage.ENGLISH)
-                .setTargetLanguage(TranslateLanguage.VIETNAMESE)
-                .build();
-        englishVietnameseTranslator = Translation.getClient(options);
-        
-        // Tải mô hình dịch về thiết bị (có thể thực hiện offline)
-        downloadTranslationModel();
+    private void setupTextToSpeech() {
+        sourceTextToSpeech = new TextToSpeechHelper(requireContext(), speakSourceButton, sourceLocales[selectedSourceLanguage]);
+        targetTextToSpeech = new TextToSpeechHelper(requireContext(), speakTargetButton, targetLocales[selectedTargetLanguage]);
+    }
 
+    private void setupClickListeners() {
         // Thiết lập các sự kiện click
-        captureButton.setOnClickListener(v -> checkCameraPermissionAndOpenCamera());
-        galleryButton.setOnClickListener(v -> checkStoragePermissionAndOpenGallery());
+        captureButton.setOnClickListener(v -> imageHelper.checkCameraPermissionAndOpenCamera());
+        galleryButton.setOnClickListener(v -> imageHelper.checkStoragePermissionAndOpenGallery());
         translateButton.setOnClickListener(v -> translateRecognizedText());
         
-        // Thiết lập sự kiện đọc văn bản
-        speakSourceButton.setOnClickListener(v -> {
-            if (!recognizedTextContent.isEmpty()) {
-                ttsSource.speak(recognizedTextContent, TextToSpeech.QUEUE_FLUSH, null, null);
-            }
-        });
+        // Thiết lập sự kiện đọc văn bản nguồn
+        speakSourceButton.setOnClickListener(v -> handleSpeakSource());
         
-        speakTargetButton.setOnClickListener(v -> {
-            String translatedContent = translatedText.getText().toString();
-            if (!translatedContent.isEmpty() && !translatedContent.equals("Đang dịch...")) {
-                ttsTarget.speak(translatedContent, TextToSpeech.QUEUE_FLUSH, null, null);
+        // Thiết lập sự kiện đọc văn bản đích
+        speakTargetButton.setOnClickListener(v -> handleSpeakTarget());
+        
+        // Thiết lập sự kiện sao chép văn bản nguồn
+        copySourceButton.setOnClickListener(v -> handleCopySource());
+        
+        // Thiết lập sự kiện sao chép văn bản đích
+        copyTargetButton.setOnClickListener(v -> handleCopyTarget());
+    }
+    
+    private void handleSpeakSource() {
+        String content = recognizedText.getText().toString();
+        if (!content.isEmpty()) {
+            sourceTextToSpeech.speak(content);
+        }
+    }
+
+    private void handleSpeakTarget() {
+        String translatedContent = translatedText.getText().toString();
+        if (!translatedContent.isEmpty() && !translatedContent.equals("Đang dịch...")) {
+            targetTextToSpeech.speak(translatedContent);
+        }
+    }
+
+    private void handleCopySource() {
+        String content = recognizedText.getText().toString();
+        if (!content.isEmpty()) {
+            copyToClipboard(content, "Văn bản nguồn");
+            Toast.makeText(requireContext(), "Đã sao chép văn bản nguồn", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void handleCopyTarget() {
+        String translatedContent = translatedText.getText().toString();
+        if (!translatedContent.isEmpty() && !translatedContent.equals("Đang dịch...")) {
+            copyToClipboard(translatedContent, "Văn bản dịch");
+            Toast.makeText(requireContext(), "Đã sao chép bản dịch", Toast.LENGTH_SHORT).show();
+        }
+    }
+    
+    private void copyToClipboard(String text, String label) {
+        ClipData clip = ClipData.newPlainText(label, text);
+        clipboardManager.setPrimaryClip(clip);
+    }
+    
+    private void updateSourceLanguage() {
+        if (sourceTextToSpeech != null) {
+            sourceTextToSpeech.setLanguage(sourceLocales[selectedSourceLanguage]);
+            sourceTextToSpeech.setEnabled(!recognizedText.getText().toString().isEmpty());
+        }
+    }
+
+    private void translateRecognizedText() {
+        String textToTranslate = recognizedText.getText().toString();
+        if (textToTranslate.isEmpty()) {
+            Toast.makeText(requireContext(), "Không có văn bản để dịch", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        
+        translatedText.setText("Đang dịch...");
+        targetTextToSpeech.setEnabled(false);
+        copyTargetButton.setEnabled(false);
+        
+        String sourceLanguage = sourceLanguageCodes[selectedSourceLanguage];
+        String targetLanguage = targetLanguageCodes[selectedTargetLanguage];
+        
+        translatorManager.translate(sourceLanguage, targetLanguage, textToTranslate, new TranslationCallback() {
+            @Override
+            public void onTranslationSuccess(String translatedText) {
+                TextRecognitionFragment.this.translatedText.setText(translatedText);
+                targetTextToSpeech.setEnabled(true);
+                copyTargetButton.setEnabled(true);
+            }
+
+            @Override
+            public void onTranslationFailure(String errorMessage) {
+                TextRecognitionFragment.this.translatedText.setText("Lỗi dịch: " + errorMessage);
+                targetTextToSpeech.setEnabled(false);
+                copyTargetButton.setEnabled(false);
+                Toast.makeText(requireContext(), 
+                        "Lỗi khi dịch văn bản: " + errorMessage, 
+                        Toast.LENGTH_SHORT).show();
             }
         });
-
-        // Ban đầu vô hiệu hóa nút đọc
-        speakSourceButton.setEnabled(false);
-        speakTargetButton.setEnabled(false);
-
-        return view;
-    }
-    
-    private void downloadTranslationModel() {
-        englishVietnameseTranslator.downloadModelIfNeeded()
-                .addOnSuccessListener(unused -> {
-                    // Mô hình đã được tải xuống thành công
-                })
-                .addOnFailureListener(e -> {
-                    // Xử lý lỗi khi tải mô hình
-                    Toast.makeText(requireContext(), 
-                            "Không thể tải mô hình dịch: " + e.getMessage(), 
-                            Toast.LENGTH_SHORT).show();
-                });
-    }
-
-    private void checkCameraPermissionAndOpenCamera() {
-        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.CAMERA)
-                != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(requireActivity(),
-                    new String[]{Manifest.permission.CAMERA}, CAMERA_PERMISSION_CODE);
-        } else {
-            openCamera();
-        }
-    }
-    
-    private void checkStoragePermissionAndOpenGallery() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            // Android 13+ sử dụng READ_MEDIA_IMAGES
-            if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.READ_MEDIA_IMAGES)
-                    != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(requireActivity(),
-                        new String[]{Manifest.permission.READ_MEDIA_IMAGES}, STORAGE_PERMISSION_CODE);
-            } else {
-                openGallery();
-            }
-        } else {
-            // Android 12 trở xuống sử dụng READ_EXTERNAL_STORAGE
-            if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.READ_EXTERNAL_STORAGE)
-                    != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(requireActivity(),
-                        new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, STORAGE_PERMISSION_CODE);
-            } else {
-                openGallery();
-            }
-        }
-    }
-
-    private void openCamera() {
-        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        startActivityForResult(intent, CAMERA_REQUEST_CODE);
-    }
-    
-    private void openGallery() {
-        Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-        startActivityForResult(intent, GALLERY_REQUEST_CODE);
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == CAMERA_PERMISSION_CODE) {
+        if (requestCode == ImageHelper.getCameraPermissionCode()) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                openCamera();
+                imageHelper.checkCameraPermissionAndOpenCamera();
             } else {
                 Toast.makeText(requireContext(), "Cần quyền camera để sử dụng tính năng này", Toast.LENGTH_SHORT).show();
             }
-        } else if (requestCode == STORAGE_PERMISSION_CODE) {
+        } else if (requestCode == ImageHelper.getStoragePermissionCode()) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                openGallery();
+                imageHelper.checkStoragePermissionAndOpenGallery();
             } else {
                 Toast.makeText(requireContext(), "Cần quyền truy cập bộ nhớ để sử dụng tính năng này", Toast.LENGTH_SHORT).show();
             }
@@ -224,23 +293,17 @@ public class TextRecognitionFragment extends Fragment {
     @Override
     public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == CAMERA_REQUEST_CODE && data != null) {
+        if (requestCode == ImageHelper.getCameraRequestCode() && data != null) {
             Bitmap photo = (Bitmap) data.getExtras().get("data");
             if (photo != null) {
                 imageView.setImageBitmap(photo);
                 recognizeText(photo);
             }
-        } else if (requestCode == GALLERY_REQUEST_CODE && data != null) {
+        } else if (requestCode == ImageHelper.getGalleryRequestCode() && data != null) {
             Uri selectedImageUri = data.getData();
             if (selectedImageUri != null) {
                 try {
-                    Bitmap bitmap;
-                    if (Build.VERSION.SDK_INT < 28) {
-                        bitmap = MediaStore.Images.Media.getBitmap(requireActivity().getContentResolver(), selectedImageUri);
-                    } else {
-                        ImageDecoder.Source source = ImageDecoder.createSource(requireActivity().getContentResolver(), selectedImageUri);
-                        bitmap = ImageDecoder.decodeBitmap(source);
-                    }
+                    Bitmap bitmap = imageHelper.getBitmapFromUri(selectedImageUri);
                     imageView.setImageBitmap(bitmap);
                     recognizeText(bitmap);
                 } catch (IOException e) {
@@ -256,59 +319,40 @@ public class TextRecognitionFragment extends Fragment {
         recognizer.process(image)
                 .addOnSuccessListener(text -> {
                     if (text.getText().isEmpty()) {
-                        resultText.setText("Không tìm thấy văn bản trong ảnh");
+                        recognizedText.setText("");
                         translateButton.setEnabled(false);
-                        speakSourceButton.setEnabled(false);
-                        recognizedTextContent = "";
+                        sourceTextToSpeech.setEnabled(false);
+                        copySourceButton.setEnabled(false);
+                        Toast.makeText(requireContext(), "Không tìm thấy văn bản trong ảnh", Toast.LENGTH_SHORT).show();
                     } else {
-                        recognizedTextContent = text.getText();
-                        resultText.setText(recognizedTextContent);
+                        recognizedText.setText(text.getText());
                         translateButton.setEnabled(true);
-                        speakSourceButton.setEnabled(true);
+                        sourceTextToSpeech.setEnabled(true);
+                        copySourceButton.setEnabled(true);
                     }
                 })
                 .addOnFailureListener(e -> {
-                    resultText.setText("Lỗi: " + e.getMessage());
+                    recognizedText.setText("");
                     translateButton.setEnabled(false);
-                    speakSourceButton.setEnabled(false);
-                    recognizedTextContent = "";
-                });
-    }
-    
-    private void translateRecognizedText() {
-        if (recognizedTextContent.isEmpty()) {
-            Toast.makeText(requireContext(), "Không có văn bản để dịch", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        
-        translatedText.setText("Đang dịch...");
-        speakTargetButton.setEnabled(false);
-        
-        englishVietnameseTranslator.translate(recognizedTextContent)
-                .addOnSuccessListener(translatedString -> {
-                    translatedText.setText(translatedString);
-                    speakTargetButton.setEnabled(true);
-                })
-                .addOnFailureListener(e -> {
-                    translatedText.setText("Lỗi dịch: " + e.getMessage());
-                    speakTargetButton.setEnabled(false);
-                    Toast.makeText(requireContext(), 
-                            "Lỗi khi dịch văn bản: " + e.getMessage(), 
-                            Toast.LENGTH_SHORT).show();
+                    sourceTextToSpeech.setEnabled(false);
+                    copySourceButton.setEnabled(false);
+                    Toast.makeText(requireContext(), "Lỗi: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 });
     }
     
     @Override
     public void onDestroy() {
-        if (ttsSource != null) {
-            ttsSource.stop();
-            ttsSource.shutdown();
+        if (sourceTextToSpeech != null) {
+            sourceTextToSpeech.shutdown();
         }
-        if (ttsTarget != null) {
-            ttsTarget.stop();
-            ttsTarget.shutdown();
+        if (targetTextToSpeech != null) {
+            targetTextToSpeech.shutdown();
         }
-        englishVietnameseTranslator.close();
+        
+        if (translatorManager != null) {
+            translatorManager.closeAll();
+        }
+        
         super.onDestroy();
     }
 }
