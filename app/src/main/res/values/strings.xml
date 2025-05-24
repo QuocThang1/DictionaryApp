@@ -1,3 +1,31 @@
 <resources>
     <string name="app_name">DictionaryApp</string>
+    
+    <!-- Ngôn ngữ nguồn -->
+    <string-array name="source_languages">
+        <item>Tiếng Anh</item>
+        <item>Tiếng Việt</item>
+        <item>Tiếng Pháp</item>
+        <item>Tiếng Trung</item>
+    </string-array>
+    
+    <!-- Mã ngôn ngữ tương ứng cho ML Kit -->
+    <string-array name="source_language_codes">
+        <item>en</item>
+        <item>vi</item>
+        <item>fr</item>
+        <item>zh</item>
+    </string-array>
+    
+    <!-- Ngôn ngữ đích -->
+    <string-array name="target_languages">
+        <item>Tiếng Việt</item>
+        <item>Tiếng Anh</item>
+    </string-array>
+    
+    <!-- Mã ngôn ngữ đích tương ứng cho ML Kit -->
+    <string-array name="target_language_codes">
+        <item>vi</item>
+        <item>en</item>
+    </string-array>
 </resources>
