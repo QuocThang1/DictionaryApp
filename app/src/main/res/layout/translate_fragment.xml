@@ -161,18 +161,35 @@
                         android:padding="12dp"
                         android:textSize="16sp"/>
 
-                    <ImageButton
-                        android:id="@+id/speakTargetButton"
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
                         android:layout_gravity="bottom"
                         android:layout_marginStart="8dp"
-                        android:layout_marginBottom="8dp"
-                        android:src="@drawable/ic_speaker"
-                        android:background="@drawable/circle_button_background"
-                        android:tint="#3F51B5"
-                        android:padding="8dp"
-                        android:contentDescription="Nghe phát âm"/>
+                        android:layout_marginBottom="8dp">
+
+                        <ImageButton
+                            android:id="@+id/copyOutputButton"
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
+                            android:src="@drawable/ic_copy"
+                            android:background="@drawable/circle_button_background"
+                            android:tint="#3F51B5"
+                            android:padding="8dp"
+                            android:layout_marginBottom="8dp"
+                            android:contentDescription="Sao chép văn bản"/>
+
+                        <ImageButton
+                            android:id="@+id/speakTargetButton"
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
+                            android:src="@drawable/ic_speaker"
+                            android:background="@drawable/circle_button_background"
+                            android:tint="#3F51B5"
+                            android:padding="8dp"
+                            android:contentDescription="Nghe phát âm"/>
+                    </LinearLayout>
                 </LinearLayout>
             </LinearLayout>
         </androidx.cardview.widget.CardView>

@@ -35,6 +35,7 @@ public class TranslateFragment extends Fragment implements TextToSpeech.OnInitLi
     private ImageButton detectLanguageButton;
     private ImageButton speakSourceButton;
     private ImageButton speakTargetButton;
+    private ImageButton copyOutputButton;
     private Spinner sourceLanguageSpinner;
     private Spinner targetLanguageSpinner;
     private ProgressBar progressBar;
@@ -61,6 +62,7 @@ public class TranslateFragment extends Fragment implements TextToSpeech.OnInitLi
         detectLanguageButton = view.findViewById(R.id.detectLanguageButton);
         speakSourceButton = view.findViewById(R.id.speakSourceButton);
         speakTargetButton = view.findViewById(R.id.speakTargetButton);
+        copyOutputButton = view.findViewById(R.id.copyOutputButton);
         sourceLanguageSpinner = view.findViewById(R.id.sourceLanguageSpinner);
         targetLanguageSpinner = view.findViewById(R.id.targetLanguageSpinner);
         progressBar = view.findViewById(R.id.progressBar);
@@ -81,7 +83,7 @@ public class TranslateFragment extends Fragment implements TextToSpeech.OnInitLi
         detectLanguageButton.setOnClickListener(v -> detectLanguage());
         speakSourceButton.setOnClickListener(v -> speakText(inputText.getText().toString(), getLocaleForLanguage(currentSourceLanguageCode)));
         speakTargetButton.setOnClickListener(v -> speakText(outputText.getText().toString(), getLocaleForLanguage(currentTargetLanguageCode)));
-
+        copyOutputButton.setOnClickListener(v -> copyTranslatedText());
         return view;
     }
 
@@ -220,6 +222,21 @@ public class TranslateFragment extends Fragment implements TextToSpeech.OnInitLi
             case "zh-TW": return Locale.TRADITIONAL_CHINESE;
             default: return Locale.US;
         }
+    }
+
+    private void copyTranslatedText() {
+        String text = outputText.getText().toString().trim();
+        if (text.isEmpty()) {
+            Toast.makeText(getContext(), "Không có văn bản để sao chép", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        android.content.ClipboardManager clipboard = (android.content.ClipboardManager)
+                getContext().getSystemService(android.content.Context.CLIPBOARD_SERVICE);
+        android.content.ClipData clip = android.content.ClipData.newPlainText("Văn bản đã dịch", text);
+        clipboard.setPrimaryClip(clip);
+
+        Toast.makeText(getContext(), "Đã sao chép văn bản", Toast.LENGTH_SHORT).show();
     }
 
     private void speakText(String text, Locale locale) {
